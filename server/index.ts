@@ -1,6 +1,5 @@
 import "dotenv/config";
 import express, { type Request, type Response } from "express";
-import { createServer } from "http";
 import { ObjectId } from "mongodb";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -74,9 +73,8 @@ function getOwnerId(req: Request, res: Response) {
   return ownerId;
 }
 
-async function startServer() {
+export function createApp({ serveStatic = true } = {}) {
   const app = express();
-  const server = createServer(app);
 
   app.use(express.json());
 
@@ -387,24 +385,34 @@ async function startServer() {
     }
   });
 
-  // Serve static files from dist/public in production
-  const staticPath =
-    process.env.NODE_ENV === "production"
-      ? path.resolve(__dirname, "public")
-      : path.resolve(__dirname, "..", "dist", "public");
+  if (serveStatic) {
+    // Serve static files from dist/public in production
+    const staticPath =
+      process.env.NODE_ENV === "production"
+        ? path.resolve(__dirname, "public")
+        : path.resolve(__dirname, "..", "dist", "public");
 
-  app.use(express.static(staticPath));
+    app.use(express.static(staticPath));
 
-  // Handle client-side routing - serve index.html for all routes
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
-  });
+    // Handle client-side routing - serve index.html for all routes
+    app.get("*", (_req, res) => {
+      res.sendFile(path.join(staticPath, "index.html"));
+    });
+  }
+
+  return app;
+}
+
+async function startServer() {
+  const app = createApp();
 
   const port = process.env.PORT || (process.env.NODE_ENV === "production" ? 3000 : 3001);
 
-  server.listen(port, () => {
+  app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+if (!process.env.VERCEL) {
+  startServer().catch(console.error);
+}
