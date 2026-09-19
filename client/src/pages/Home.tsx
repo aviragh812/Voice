@@ -94,6 +94,8 @@ declare global {
 
 const fallbackTint = "#eef4e6";
 const fallbackIcon = "BS";
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+const apiUrl = (path: string) => `${apiBaseUrl}${path}`;
 const quantityWords: Record<string, number> = {
   one: 1,
   two: 2,
@@ -776,8 +778,8 @@ export default function Home() {
       setIsLoading(true);
       try {
         const [productsResponse, transactionsResponse] = await Promise.all([
-          fetch("/api/products", { headers: apiHeaders }),
-          fetch("/api/transactions", { headers: apiHeaders }),
+          fetch(apiUrl("/api/products"), { headers: apiHeaders }),
+          fetch(apiUrl("/api/transactions"), { headers: apiHeaders }),
         ]);
 
         if (!productsResponse.ok || !transactionsResponse.ok) {
@@ -845,7 +847,7 @@ export default function Home() {
     }
 
     try {
-      const response = await fetch("/api/stock-events", {
+      const response = await fetch(apiUrl("/api/stock-events"), {
         method: "POST",
         headers: apiHeaders,
         body: JSON.stringify({ productName, quantity, type: isRemove ? "remove" : "add" }),
@@ -1014,7 +1016,7 @@ export default function Home() {
 
     setIsCompletingPurchase(true);
     try {
-      const response = await fetch("/api/customer-purchases/checkout", {
+      const response = await fetch(apiUrl("/api/customer-purchases/checkout"), {
         method: "POST",
         headers: apiHeaders,
         body: JSON.stringify({
@@ -1044,7 +1046,7 @@ export default function Home() {
     setNotice("Checking MongoDB Atlas connection...");
 
     try {
-      const response = await fetch("/api/health");
+      const response = await fetch(apiUrl("/api/health"));
       const payload = await readApiJson(response);
 
       if (!response.ok || !payload.ok) {
@@ -1074,7 +1076,7 @@ export default function Home() {
 
     setIsAddingItem(true);
     try {
-      const response = await fetch("/api/stock-events", {
+      const response = await fetch(apiUrl("/api/stock-events"), {
         method: "POST",
         headers: apiHeaders,
         body: JSON.stringify({
@@ -1133,7 +1135,7 @@ export default function Home() {
 
     setIsUpdatingPrice(true);
     try {
-      const response = await fetch(`/api/products/${priceProduct._id}/price`, {
+      const response = await fetch(apiUrl(`/api/products/${priceProduct._id}/price`), {
         method: "PATCH",
         headers: apiHeaders,
         body: JSON.stringify({ price }),
